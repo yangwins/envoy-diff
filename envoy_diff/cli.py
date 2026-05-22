@@ -2,7 +2,7 @@
 
 import argparse
 import sys
-from typing import Optional, Sequence
+from typing import Dict
 
 from envoy_diff.loader import load_from_env, load_from_file
 from envoy_diff.reporter import report
@@ -14,20 +14,32 @@ def build_parser() -> argparse.ArgumentParser:
         description="Diff environment variable sets across deployments.",
     )
     parser.add_argument(
-        "baseline",
-        metavar="BASELINE",
-        help="Path to baseline env file (.json or .env), or '-' to read from current environment.",
+        "base",
+        nargs="?",
+        default=None,
+        help="Base env file (JSON or .env). Omit to use current environment.",
     )
     parser.add_argument(
         "target",
-        metavar="TARGET",
-        help="Path to target env file (.json or .env), or '-' to read from current environment.",
+        help="Target env file (JSON or .env) to compare against base.",
     )
     parser.add_argument(
         "--no-color",
         action="store_true",
         default=False,
         help="Disable coloured output.",
+    )
+    parser.add_argument(
+        "--mask",
+        action="store_true",
+        default=False,
+        help="Mask sensitive values (passwords, tokens, keys, etc.).",
+    )
+    parser.add_argument(
+        "--show-length",
+        action="store_true",
+        default=False,
+        help="When masking, append the original value length (e.g. ***(12)).",
     )
     parser.add_argument(
         "--output",
@@ -38,28 +50,25 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _load(path: str) -> dict:
-    if path == "-":
-        return load_from_env()
+def _load(path: str) -> Dict[str, str]:
+    """Load an env from a file path."""
     return load_from_file(path)
 
 
-def main(argv: Optional[Sequence[str]] = None) -> int:
+def main(argv=None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
 
-    try:
-        baseline = _load(args.baseline)
-        target = _load(args.target)
-    except (FileNotFoundError, ValueError) as exc:
-        print(f"envoy-diff: error: {exc}", file=sys.stderr)
-        return 2
+    base_env = load_from_env() if args.base is None else _load(args.base)
+    target_env = _load(args.target)
 
     return report(
-        baseline,
-        target,
+        base_env,
+        target_env,
         use_color=not args.no_color,
         output_format=args.output,
+        mask=args.mask,
+        show_length=args.show_length,
     )
 
 
