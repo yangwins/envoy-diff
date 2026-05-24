@@ -28,6 +28,7 @@ def test_snapshot_diff_detects_no_changes(tmp_path):
 
 
 def test_snapshot_diff_detects_added_key(tmp_path):
+    """Diffing a base snapshot against one with a new key reports it as added."""
     base = {"FOO": "1"}
     updated = {"FOO": "1", "NEW_KEY": "hello"}
     snap1 = tmp_path / "base.json"
@@ -39,6 +40,7 @@ def test_snapshot_diff_detects_added_key(tmp_path):
 
 
 def test_snapshot_diff_detects_changed_value(tmp_path):
+    """Diffing two snapshots where a value changed reports it as changed."""
     snap1 = tmp_path / "old.json"
     snap2 = tmp_path / "new.json"
     save_snapshot({"VERSION": "1.0"}, snap1)
@@ -48,6 +50,7 @@ def test_snapshot_diff_detects_changed_value(tmp_path):
 
 
 def test_snapshot_diff_detects_removed_key(tmp_path):
+    """Diffing two snapshots where a key was dropped reports it as removed."""
     snap1 = tmp_path / "old.json"
     snap2 = tmp_path / "new.json"
     save_snapshot({"GONE": "yes", "KEEP": "ok"}, snap1)
@@ -64,3 +67,20 @@ def test_load_from_dict_then_snapshot_round_trip(tmp_path):
     save_snapshot(env, dest)
     restored = load_snapshot(dest)
     assert restored == {"PORT": "9000", "WORKERS": "4"}
+
+
+def test_snapshot_diff_multiple_changes(tmp_path):
+    """Diffing snapshots with added, removed, and changed keys reports all three."""
+    old = {"KEEP": "same", "CHANGE": "before", "REMOVE": "bye"}
+    new = {"KEEP": "same", "CHANGE": "after", "ADD": "hi"}
+    snap1 = tmp_path / "old.json"
+    snap2 = tmp_path / "new.json"
+    save_snapshot(old, snap1)
+    save_snapshot(new, snap2)
+    result = diff_envs(load_snapshot(snap1), load_snapshot(snap2))
+    assert "ADD" in result.added
+    assert "REMOVE" in result.removed
+    assert "CHANGE" in result.changed
+    assert "KEEP" not in result.added
+    assert "KEEP" not in result.removed
+    assert "KEEP" not in result.changed
