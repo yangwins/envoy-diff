@@ -49,3 +49,22 @@ def apply_filters(
     if regex:
         result = filter_keys_by_regex(result, regex)
     return result
+
+
+def apply_filters_from_args(
+    env: Dict[str, str],
+    args: argparse.Namespace,
+) -> Dict[str, str]:
+    """Convenience wrapper that reads filter options directly from parsed *args*.
+
+    Extracts ``prefix``, ``include``, ``exclude``, and ``regex`` attributes
+    from *args* (as produced by :func:`add_filter_args`) and delegates to
+    :func:`apply_filters`.
+    """
+    return apply_filters(
+        env,
+        prefix=getattr(args, "prefix", None),
+        include=getattr(args, "include", None),
+        exclude=getattr(args, "exclude", None),
+        regex=getattr(args, "regex", None),
+    )
