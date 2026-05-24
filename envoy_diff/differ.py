@@ -11,6 +11,15 @@ class DiffResult:
     changed: Dict[str, tuple] = field(default_factory=dict)
     unchanged: Dict[str, str] = field(default_factory=dict)
 
+    def counts(self) -> Dict[str, int]:
+        """Return a dictionary of counts for each diff category."""
+        return {
+            "added": len(self.added),
+            "removed": len(self.removed),
+            "changed": len(self.changed),
+            "unchanged": len(self.unchanged),
+        }
+
 
 def has_differences(result: DiffResult) -> bool:
     """Return True if the diff result contains any differences."""
