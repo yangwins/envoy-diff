@@ -85,6 +85,16 @@ def test_compare_summary_counts_added():
     assert result.summary.added == 2
 
 
+def test_compare_summary_counts_removed():
+    result = compare({"X": "1", "Y": "2", "Z": "3"}, {})
+    assert result.summary.removed == 3
+
+
+def test_compare_summary_counts_changed():
+    result = compare({"A": "old", "B": "same"}, {"A": "new", "B": "same"})
+    assert result.summary.changed == 1
+
+
 def test_compare_score_is_score_result():
     from envoy_diff.scorer import ScoreResult
     result = compare({"A": "1"}, {"A": "2"})
@@ -103,4 +113,4 @@ def test_compare_as_dict_structure():
 def test_compare_as_dict_diff_keys():
     result = compare({}, {})
     diff_dict = result.as_dict()["diff"]
-    assert set(diff_dict.keys()) == {"added", "removed", "changed", "unchanged"}
+    assert set(diff_dict.keys()) == {"added", "removed", "changed"}
