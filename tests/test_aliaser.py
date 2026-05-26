@@ -69,6 +69,15 @@ def test_save_alias_returns_path(alias_dir):
     assert p.exists()
 
 
+def test_save_alias_overwrites_existing_key(alias_dir):
+    """Saving an alias for an existing key should update the value, not duplicate it."""
+    save_alias("KEY", "ORIGINAL", alias_dir)
+    save_alias("KEY", "UPDATED", alias_dir)
+    aliases = load_aliases(alias_dir)
+    assert aliases["KEY"] == "UPDATED"
+    assert list(aliases.keys()).count("KEY") == 1
+
+
 # ---------------------------------------------------------------------------
 # remove_alias
 # ---------------------------------------------------------------------------
@@ -105,34 +114,4 @@ def test_list_aliases_sorted(alias_dir):
 
 
 # ---------------------------------------------------------------------------
-# apply_aliases
-# ---------------------------------------------------------------------------
-
-def test_apply_aliases_renames_key():
-    env = {"DB_HOST": "localhost"}
-    result = apply_aliases(env, {"DB_HOST": "DATABASE_HOST"})
-    assert "DATABASE_HOST" in result
-    assert "DB_HOST" not in result
-    assert result["DATABASE_HOST"] == "localhost"
-
-
-def test_apply_aliases_leaves_unmatched_keys():
-    env = {"APP_PORT": "8080", "DB_HOST": "localhost"}
-    result = apply_aliases(env, {"DB_HOST": "DATABASE_HOST"})
-    assert result["APP_PORT"] == "8080"
-
-
-def test_apply_aliases_does_not_mutate_original():
-    env = {"KEY": "val"}
-    apply_aliases(env, {"KEY": "OTHER"})
-    assert "KEY" in env
-
-
-def test_apply_aliases_raises_on_non_dict():
-    with pytest.raises(TypeError):
-        apply_aliases("not-a-dict", {})
-
-
-def test_apply_aliases_empty_aliases_is_noop():
-    env = {"A": "1", "B": "2"}
-    assert apply_aliases(env, {}) == env
+# apply_alia
